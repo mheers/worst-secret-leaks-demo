@@ -64,50 +64,57 @@ demo/
 
 ## What each file is testing
 
-The table below lists the **actual** findings gitleaks emits against this
-folder (gitleaks v8.30.x, default ruleset + the `demo-todo-marker` custom
-rule). Six files produce findings, the other seven are clean control
-cases.
+The table below lists the **actual** findings this project is designed to
+trigger. Results vary by scanner backend:
 
-| File                                   | Actual findings          | Notes                                                                                                                                                                                 |
-| -------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `cmd/server/main.go`                   | (none)                   | The hardcoded `ghp_…` token ends in `0123456789` (low entropy tail) and is below the rule's entropy floor in this build. Move the literal to `.env` to exercise the rule.             |
-| `cmd/hello/main.go`                    | (none)                   | Control case.                                                                                                                                                                         |
-| `internal/auth/middleware.go`          | (none)                   | High-entropy constant that is _not_ flagged — confirms the scanner does not over-match.                                                                                               |
-| `internal/auth/users.go`               | (none)                   | Empty env reads.                                                                                                                                                                      |
-| `internal/auth/testdata/test_rsa.pem`  | `private-key`            | Public jwt-go README sample.                                                                                                                                                          |
-| `internal/auth/testdata/empty_pem.pem` | (none)                   | Body too short to match.                                                                                                                                                              |
-| `internal/config/config.go`            | (none)                   | Env-only.                                                                                                                                                                             |
-| `internal/config/config.toml`          | `heroku-api-key`         | The `heroku_api_key` value matches the v8.30.x rule. SendGrid key is _not_ matched by `sendgrid-api-token` here (the test value's entropy is too low); that's the realistic behavior. |
-| `.env`                                 | `slack-bot-token`, `jwt` | `AKIA…EXAMPLE` and `ghp_…` are silently dropped by gitleaks' built-in `.+EXAMPLE$` allowlist on the `aws-access-token` rule. The xoxb- token and the JWT (entropy > 4.0) both fire.   |
-| `.env.example`                         | (none)                   | Clean template.                                                                                                                                                                       |
-| `.env.production.example`              | (none)                   | Clean template.                                                                                                                                                                       |
-| `infra/k8s-secrets.yaml`               | `slack-webhook-url`      | AWS values are dropped by the same `EXAMPLE$` allowlist.                                                                                                                              |
-| `infra/firebase.json`                  | (none — generic-api-key) | The `AIzaSyA-…` value is below the rule's entropy floor in this build. To exercise `generic-api-key`, swap it for a 40+ char random secret.                                           |
-| `scripts/bootstrap.sh`                 | `curl-auth-user`         | The inline `-u demo:AKIA…` matches the `curl-auth-user` rule. The exported `GITHUB_TOKEN` and `SENDGRID_KEY` are dropped by allowlists.                                               |
+| File                                   | trufflehog 3.95.5 findings | gitleaks v8.x findings       | Notes                                                                                                                                                                                                |
+| -------------------------------------- | -------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cmd/server/main.go`                   | `Github`                   | `github-pat` (v8.18+)        | Hardcoded `ghp_` with a high-entropy suffix. Low-entropy suffixes (e.g. `0123456789` tail) cause both scanners to skip the match.                                                                    |
+| `cmd/hello/main.go`                    | (none)                     | (none)                       | Control case — no secrets.                                                                                                                                                                           |
+| `internal/auth/middleware.go`          | (none)                     | (none)                       | High-entropy constant that is _not_ flagged — confirms the scanner does not over-match.                                                                                                              |
+| `internal/auth/users.go`               | (none)                     | (none)                       | Empty env reads.                                                                                                                                                                                     |
+| `internal/auth/testdata/test_rsa.pem`  | `PrivateKey`               | `private-key`                | Public jwt-go README sample PEM.                                                                                                                                                                     |
+| `internal/auth/testdata/empty_pem.pem` | (none)                     | (none)                       | Body too short to match.                                                                                                                                                                             |
+| `internal/config/config.go`            | (none)                     | (none)                       | Env-only — no hardcoded secrets.                                                                                                                                                                     |
+| `internal/config/config.toml`          | `Postgres`                 | `heroku-api-key`, `url-cred` | The postgres URL with embedded credentials fires the `Postgres` rule. Heroku and SendGrid keys use high-entropy hex / SG. format.                                                                    |
+| `.env`                                 | `Github`, `GoogleGemini…`  | `slack-bot-token`, `jwt`     | Every line in `.env` now carries a high-entropy token. The `AKIA…` value no longer ends in `EXAMPLE` (which would be silently allow-listed by trufflehog's built-in false-positive filter).          |
+| `.env.example`                         | (none)                     | (none)                       | Clean template — no secrets.                                                                                                                                                                         |
+| `.env.production.example`              | (none)                     | (none)                       | Clean template — no secrets.                                                                                                                                                                         |
+| `infra/k8s-secrets.yaml`               | `Github`, `SlackWebhook`   | `slack-webhook-url`          | AWS values use high-entropy suffixes (no `EXAMPLE` tail). Git PAT uses the same high-entropy format as `.env`.                                                                                       |
+| `infra/firebase.json`                  | `GoogleGeminiAPIKey`       | (none)                       | The `AIzaSy…` key now has a full 35-character high-entropy suffix so the `GoogleGeminiAPIKey` detector fires. Older gitleaks versions match it via `generic-api-key`.                                |
+| `scripts/bootstrap.sh`                 | `Github`                   | `curl-auth-user`             | The inline `-u demo:AKIA…` matches the `curl-auth-user` rule (gitleaks). The exported `GITHUB_TOKEN` and `SENDGRID_KEY` use high-entropy values. Trufflehog's `Github` detector fires on the former. |
 
-If you want **all** of the obvious rules (`github-pat`, `aws-access-token`,
-`openai-api-key`, `sendgrid-api-token`, `generic-api-key`, `firebase`)
-to fire, replace the placeholder values with longer, higher-entropy
-strings. The current fixtures bias toward realistic-but-known test
-strings so the demo is safe to commit.
+**Key design principles for the fake secrets in this demo:**
+
+1. Every value that is **meant to be found** uses a high-entropy, real-looking
+   payload that matches the detector's regex and passes the scanner's built-in
+   entropy / false-positive filters.
+2. Values that end in `EXAMPLE` or `0123456789` or that omit required
+   substrings (like `T3BlbkFJ` for the OpenAI detector) will be silently
+   skipped by the scanner — they are useful only as **negative controls** or
+   regression tests for allow-list behaviour.
+3. Because detector coverage varies between scanner versions and between
+   tools (trufflehog vs gitleaks), a value that fires in one may not fire
+   in the other. The table above documents both.
 
 ## How to scan it manually
 
 ```sh
-# Scan the entire demo folder
-gitleaks detect --no-git --source demo --report-format json --exit-code 0 --report-path /tmp/gl.json
+# Scan the entire demo folder with trufflehog
+trufflehog filesystem --no-verification --no-update --no-color --json \
+  --log-level=-1 --results=unverified,unknown . 2>/dev/null | jq -c '{detector: .DetectorName, file: .SourceMetadata.Data.Filesystem.file, raw: (.Raw | .[0:40])}'
 
-# Scan a single file via stdin (note: --pipe is the v8 flag, not --stdin)
-cat demo/.env | gitleaks detect --no-git --pipe --report-format json --exit-code 0 --report-path /tmp/gl.json
-
-# Scan with the custom config in this folder (adds the demo-todo-marker rule)
-gitleaks detect --no-git --config demo/.gitleaks.toml --source demo --report-format json --exit-code 0 --report-path /tmp/gl.json
+# Scan with gitleaks
+gitleaks detect --no-git --source . --report-format json --exit-code 0 --report-path /tmp/gl.json
+cat /tmp/gl.json | jq -c '.[] | {rule: .RuleID, file: .File, secret: (.Secret | .[0:40])}'
 ```
 
-Expected counts with the current fixtures: **6 findings from 5 files,
-hitting 6 distinct rules** (`private-key`, `slack-webhook-url`,
-`heroku-api-key`, `curl-auth-user`, `jwt`, `slack-bot-token`).
+Expected counts with the current fixtures:
+
+| Scanner         | Findings | Files hit | Distinct detectors                                                                               |
+| --------------- | -------- | --------- | ------------------------------------------------------------------------------------------------ |
+| trufflehog 3.95 | 9        | 7         | `Github` (×4), `Postgres` (×2), `PrivateKey`, `SlackWebhook`, `GoogleGeminiAPIKey`               |
+| gitleaks v8.x   | 6        | 5         | `private-key`, `slack-webhook-url`, `heroku-api-key`, `curl-auth-user`, `jwt`, `slack-bot-token` |
 
 ## How secret-scanning tools can use this
 

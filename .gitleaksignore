@@ -21,8 +21,8 @@
 # and will cause gitleaks to skip those specific findings.
 
 demo/internal/auth/testdata/test_rsa.pem:private-key:1
-demo/scripts/bootstrap.sh:curl-auth-user:13
-demo/infra/k8s-secrets.yaml:slack-webhook-url:18
-demo/internal/config/config.toml:heroku-api-key:17
-demo/.env:jwt:26
-demo/.env:slack-bot-token:20
+demo/scripts/bootstrap.sh:curl-auth-user:16
+demo/infra/k8s-secrets.yaml:slack-webhook-url:21
+demo/internal/config/config.toml:heroku-api-key:19
+demo/.env:jwt:28
+demo/.env:slack-bot-token:22

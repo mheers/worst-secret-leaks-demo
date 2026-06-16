@@ -11,5 +11,5 @@
         "express": "^4.18.0"
     },
     "_note_for_scanner": "The key below is a Firebase/Google API key. Gitleaks has a generic-api-key rule that fires on AIza-prefixed strings.",
-    "apiKey": "AIzaSyA-aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789"
+    "apiKey": "AIzaSyAaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUU"
 }

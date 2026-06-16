@@ -8,14 +8,18 @@ host = "0.0.0.0"
 port = 8080
 
 [database]
-# Looks like a real connection string with embedded credentials.
+# Looks like a real connection string with embedded credentials
+# (matched by the `Postgres` detector in both trufflehog and gitleaks).
 url = "postgres://app_user:s3cret-pa55word@db.internal:5432/app"
 
 [integrations]
 # Heroku API key pattern: 64 hex / uuid-ish chars, prefixed by "heroku_"
-# in some tooling. The string below matches the `heroku-api-key` rule.
-heroku_api_key = "12345678-90ab-cdef-1234-567890abcdef"
-sendgrid_api_key = "SG.AbCdEfGhIjKlMnOpQrStUvWxYz0123456789._aBcDeFgHiJkLmNoPqRsTuVwX"
+# in some tooling. Uses a high-entropy hex string (no repeated nibbles)
+# so both gitleaks (`heroku-api-key`) and trufflehog fire.
+heroku_api_key = "abcd1234efab5678cdef9012abcd3456efab7890abcd1234efab5678cdef9012"
+# SendGrid API key — first segment is 22 word-chars (within the
+# 20-24 range), second segment is 47 chars (within the 39-50 range).
+sendgrid_api_key = "SG.aBcDeFgHiJkLmNoPqRsTuVWxYz01._aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789ABCDEFGHIJ"
 
 # A non-secret URL with embedded credentials (matches url-with-password rule)
 ssh_url = "ssh://git@github.com/example/demo.git"

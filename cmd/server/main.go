@@ -7,9 +7,13 @@
 // ../../SECURITY.md for the full disclaimer.
 //
 // This file exists to validate that secret-scanning tooling:
-//   - flags the hardcoded `ghp_…` value with the `github-pat` rule, and
-//   - redacts it (e.g. to `[REDACTED:github-pat]`) before any downstream
+//   - flags the hardcoded `ghp_…` value with the `Github` rule, and
+//   - redacts it (e.g. to `[REDACTED:Github]`) before any downstream
 //     consumer (such as an LLM) is allowed to see the file contents.
+//
+// The token suffix is high-entropy (no `0123456789` tail) so
+// trufflehog's Github detector actually fires — a low-entropy
+// suffix like `0123456789` causes the detector to skip the match.
 package main
 
 import (
@@ -21,7 +25,7 @@ import (
 	"demo/internal/config"
 )
 
-const hardcodedGitHubToken = "ghp_aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789"
+const hardcodedGitHubToken = "ghp_M7p9Lq3RtV34X7K2H8Q5N1B6J0Z9D4Y7S2P8"
 
 func main() {
 	cfg, err := config.Load()

@@ -1,0 +1,21 @@
+# config.toml — INTENTIONALLY DIRTY. Contains a Heroku API UUID
+# (`heroku-api-key` rule) and a generic password-style string.
+
+title = "demo-service"
+
+[server]
+host = "0.0.0.0"
+port = 8080
+
+[database]
+# Looks like a real connection string with embedded credentials.
+url = "postgres://app_user:s3cret-pa55word@db.internal:5432/app"
+
+[integrations]
+# Heroku API key pattern: 64 hex / uuid-ish chars, prefixed by "heroku_"
+# in some tooling. The string below matches the `heroku-api-key` rule.
+heroku_api_key = "12345678-90ab-cdef-1234-567890abcdef"
+sendgrid_api_key = "SG.AbCdEfGhIjKlMnOpQrStUvWxYz0123456789._aBcDeFgHiJkLmNoPqRsTuVwX"
+
+# A non-secret URL with embedded credentials (matches url-with-password rule)
+ssh_url = "ssh://git@github.com/example/demo.git"

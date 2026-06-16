@@ -1,0 +1,15 @@
+{
+    "name": "demo-app",
+    "version": "0.1.0",
+    "private": true,
+    "description": "Demo package manifest with an embedded API key (DIRTY on purpose).",
+    "scripts": {
+        "start": "node server.js",
+        "test": "jest"
+    },
+    "dependencies": {
+        "express": "^4.18.0"
+    },
+    "_note_for_scanner": "The key below is a Firebase/Google API key. Gitleaks has a generic-api-key rule that fires on AIza-prefixed strings.",
+    "apiKey": "AIzaSyA-aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789"
+}

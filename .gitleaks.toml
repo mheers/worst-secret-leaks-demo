@@ -1,0 +1,26 @@
+# gitleaks config for the demo folder.
+#
+# Purpose: this config exists so the extension author can experiment with
+# custom rules and allowlists without touching the user's global config.
+# Run it via:
+#
+#   gitleaks detect --no-git --config demo/.gitleaks.toml --source demo
+#
+# We extend the upstream default ruleset and add a few local overrides.
+
+title = "demo gitleaks config"
+
+[extend]
+useDefault = true
+
+# ---------------------------------------------------------------------------
+# Custom rule: flag any TODO/FIXME comment that mentions secrets. This
+# is *not* a real secret, but it's a useful smoke marker when reviewing
+# diffs in this demo folder.
+# ---------------------------------------------------------------------------
+[[custom_rules]]
+id = "demo-todo-marker"
+description = "TODO comments that mention secret handling"
+regex = '''(?i)(TODO|FIXME).{0,40}(api[_-]?key|secret|token|password)'''
+keywords = ["todo", "fixme"]
+tags = ["demo"]

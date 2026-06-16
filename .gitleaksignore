@@ -1,0 +1,28 @@
+# .gitleaksignore — format: `file:rule-id:start-line` (one per line).
+
+#
+
+# This file is auto-loaded by gitleaks from the source directory and is
+
+# a standard part of gitleaks' configuration. Any operator running a
+
+# gitleaks-based scan against this repo can point their tool's
+
+# gitleaks-ignore-path setting at this file.
+
+#
+
+# Each line below documents a finding in this demo that the operator has
+
+# triaged as a known-acceptable placeholder (i.e. a public test string
+
+# from the AWS or jwt-go READMEs). The lines are valid for gitleaks v8.x
+
+# and will cause gitleaks to skip those specific findings.
+
+demo/internal/auth/testdata/test_rsa.pem:private-key:1
+demo/scripts/bootstrap.sh:curl-auth-user:13
+demo/infra/k8s-secrets.yaml:slack-webhook-url:18
+demo/internal/config/config.toml:heroku-api-key:17
+demo/.env:jwt:26
+demo/.env:slack-bot-token:20

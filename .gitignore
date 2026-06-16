@@ -1,0 +1,14 @@
+# The dirty .env in this directory is committed on purpose so the
+# secret scanner has something to find. If you'd rather not commit it,
+# comment the next line out.
+!.env
+
+# Real PEM private keys from any real project shouldn't be committed;
+# the testdata files in this folder are the public jwt-go README sample.
+*.pem
+!testdata/*.pem
+
+# Build artifacts
+/bin/
+/demo-server
+/demo-hello
